@@ -20,6 +20,7 @@
     NSString        *fileName;             //download file name
     
     NSMutableURLRequest *urlRequest;
+    NSString *desPath;
 }
 
 /**
@@ -56,7 +57,7 @@ didCompleteWithError:(nullable NSError *)error {
         }
         else {
             self.downloadTask = [self.session downloadTaskWithRequest:urlRequest];
-//            [self.downloadTask resume];
+            //            [self.downloadTask resume];
         }
         [self.downloadTask resume];
     }
@@ -87,8 +88,8 @@ didCompleteWithError:(nullable NSError *)error {
 didFinishDownloadingToURL:(NSURL *)location {
     
     if (!self.isTest) {
-        NSString *path = [FILEPATH stringByAppendingPathComponent:[NSString stringWithFormat:@"%@-%02td",
-                                                                   fileName,self.index]];
+        NSString *path = [desPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@-%02td",
+                                                                  fileName,self.index]];
         
         [[NSFileManager defaultManager] moveItemAtURL:location
                                                 toURL:[NSURL fileURLWithPath:path]
@@ -144,16 +145,18 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 
 #pragma mark - Public Method
 
-+ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range {
++ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andDesPath:(NSString *)des_path {
     
     VHDownload *download = [[self alloc] init];
-    [download startWithUrl:surl andRange:range];
+    [download startWithUrl:surl andRange:range andPath:des_path];
     download.isTest = NO;
+    
     return download;
 }
 
-- (void)startWithUrl:(NSString *)surl andRange:(VHRequestRange *)range {
+- (void)startWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andPath:(NSString *)path{
     
+    desPath = [NSString stringWithString:path];
     strRequestURL = [NSString stringWithString:surl];
     requestRange = [[VHRequestRange alloc] initWithLocation:range.location
                                                   andLength:range.length];
@@ -194,22 +197,22 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 - (NSURLSession *)session
 {
     if (nil == _session) {
-
+        
         NSURLSessionConfiguration *cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
         
         
         
         if (!self.isTest) {
-
+            
             NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
             NSString *sid = [NSString stringWithFormat:@"%@.%@.%d",identifier,fileName,self.index];
             cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:sid];
-//            cfg.HTTPMaximumConnectionsPerHost = 5;
+            //            cfg.HTTPMaximumConnectionsPerHost = 5;
         }
         
         
         self.session = [NSURLSession sessionWithConfiguration:cfg delegate:self delegateQueue:[NSOperationQueue mainQueue]];
-
+        
     }
     return _session;
 }

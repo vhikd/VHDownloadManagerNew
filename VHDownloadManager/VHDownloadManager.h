@@ -12,7 +12,6 @@
 
 @interface VHDownloadManager : NSObject
 
-
 /*
  * max download thread
  */
@@ -25,8 +24,10 @@
 
 @property (nonatomic, strong) id<VHDownloadManagerDelegate> delegate;
 
+@property (assign) NSInteger tag;
 
-- (id)initWithDownloadUrl:(NSString *)surl;
+
+- (id)initWithDownloadUrl:(NSString *)surl andDownloadPath:(NSString *)path;
 
 - (void)startDownload;
 

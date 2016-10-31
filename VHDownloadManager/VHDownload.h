@@ -37,7 +37,7 @@
 
 
 
-+ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range;
++ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andDesPath:(NSString *)des_path;
 
 - (void)startDownload;
 

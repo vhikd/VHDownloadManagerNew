@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "4A85026D8098C184C0C75E087FCF500C9F440436",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "4A85026D8098C184C0C75E087FCF500C9F440436" : 9223372036854775807,
+    "51879304E954904813C64151919A1AD09C302EA3" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "A2F6FDB9-CD0A-464F-8E84-2D1467B0F222",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "4A85026D8098C184C0C75E087FCF500C9F440436" : "VHDownloadManager\/",
+    "51879304E954904813C64151919A1AD09C302EA3" : "VHDownloadManager\/VHDownloadManager\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "VHDownloadManager",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "VHDownloadManager.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/vhikd\/VHDownloadManagerNew.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "4A85026D8098C184C0C75E087FCF500C9F440436"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/vhikd\/VHDownloadManager.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "51879304E954904813C64151919A1AD09C302EA3"
+    }
+  ]
+}

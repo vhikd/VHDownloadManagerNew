@@ -20,6 +20,8 @@
     
     NSMutableArray *arrDownload;
     NSMutableDictionary *downloadPath;
+    
+    NSString *desFilePath;
 }
 
 @end
@@ -66,8 +68,8 @@
     
     if (!download.isTest) {
         downloadedSize+=length;
-//        if(totalSize != total)
-//            totalSize = total;
+        //        if(totalSize != total)
+        //            totalSize = total;
         
         if (self.delegate && [self.delegate respondsToSelector:@selector(didLoadData:andProgress:)]) {
             [self.delegate didLoadData:length andProgress:(double)downloadedSize/totalSize];
@@ -88,7 +90,7 @@
     NSString *sk = [NSString stringWithFormat:@"%td",download.index];
     downloadPath[sk] = location;
     
-    NSLog(@"download cnt : %d",arrDownload.count);
+    NSLog(@"download cnt : %td",arrDownload.count);
     
     if (arrDownload.count <= 0) {
         
@@ -103,7 +105,7 @@
                                                        error:nil];
         }
         
-        NSString *des_file = [FILEPATH stringByAppendingPathComponent:fileName];
+        NSString *des_file = [desFilePath stringByAppendingPathComponent:fileName];
         [m_data writeToFile:des_file atomically:YES];
         [m_data resetBytesInRange:NSMakeRange(0, [m_data length])];
         [m_data setLength:0];
@@ -158,7 +160,8 @@
         }
         
         VHDownload *down = [VHDownload startDownloadWithUrl:strRequestUrl
-                                                   andRange:ran];
+                                                   andRange:ran
+                                                 andDesPath:desFilePath];
         down.index = i;
         down.delegate = self;
         [arrDownload addObject:down];
@@ -174,7 +177,8 @@
     
     VHRequestRange *range = [[VHRequestRange alloc] initWithLocation:0 andLength:1024];
     VHDownload *download = [VHDownload startDownloadWithUrl:strRequestUrl
-                                                   andRange:range];
+                                                   andRange:range
+                                                 andDesPath:desFilePath];
     download.isTest = YES;
     download.delegate = self;
     [download startDownload];
@@ -190,11 +194,12 @@
 
 #pragma mark - SYS
 
-- (id)initWithDownloadUrl:(NSString *)surl {
+- (id)initWithDownloadUrl:(NSString *)surl andDownloadPath:(NSString *)path {
     
     self = [super init];
     if (self) {
         strRequestUrl = [NSString stringWithString:surl];
+        desFilePath = [NSString stringWithString:path];
         [self initinal];
     }
     
