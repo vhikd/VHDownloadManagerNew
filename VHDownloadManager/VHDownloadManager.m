@@ -16,7 +16,7 @@
     NSString *fileName;
     
     unsigned long long downloadedSize;
-    unsigned long long totalSize;
+    //    unsigned long long totalSize;
     
     NSMutableArray *arrDownload;
     NSMutableDictionary *downloadPath;
@@ -44,7 +44,7 @@
             
             NSString *str = response.allHeaderFields[@"Content-Range"];
             NSRange ran = [str rangeOfString:@"/"];
-            totalSize = [[str substringFromIndex:ran.location+1] longLongValue];
+            self.dTotalSize = [[str substringFromIndex:ran.location+1] longLongValue];
             downloadedSize = 0;
             
             [self splitDownload];
@@ -52,9 +52,13 @@
             if (self.delegate && [self.delegate respondsToSelector:@selector(didStartDownloadWithFileName:andTotalSize:)]) {
                 
                 [self.delegate didStartDownloadWithFileName:fileName
-                                               andTotalSize:totalSize];
+                                               andTotalSize:_dTotalSize];
             }
             
+            if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didStartDownload:)]) {
+                
+                [self.delegate downloadManager:self didStartDownload:fileName];
+            }
         }
         return;
     }
@@ -71,8 +75,13 @@
         //        if(totalSize != total)
         //            totalSize = total;
         
+        _dProgress = (double)downloadedSize/_dTotalSize;
         if (self.delegate && [self.delegate respondsToSelector:@selector(didLoadData:andProgress:)]) {
-            [self.delegate didLoadData:length andProgress:(double)downloadedSize/totalSize];
+            [self.delegate didLoadData:length andProgress:_dProgress];
+        }
+        
+        if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didLoadData:)]) {
+            [self.delegate downloadManager:self didLoadData:downloadedSize];
         }
     }
     
@@ -116,6 +125,10 @@
             [self.delegate didFinishLoadInDirectory:des_file];
         }
         
+        if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didFinishLoadInDirectory:)]) {
+            [self.delegate downloadManager:self didFinishLoadInDirectory:des_file];
+        }
+        
     }
 }
 
@@ -145,14 +158,14 @@
     }
     [arrDownload removeAllObjects];
     
-    unsigned long long per_size = totalSize/self.maxDownloadThread;
+    unsigned long long per_size = _dTotalSize/self.maxDownloadThread;
     
     for (int i=0; i<self.maxDownloadThread; i++) {
         
         VHRequestRange *ran;
         if (i== self.maxDownloadThread-1) {//最后一个
             ran = [[VHRequestRange alloc] initWithLocation:i*(per_size+1)
-                                                 andLength:totalSize-i*per_size];
+                                                 andLength:_dTotalSize-i*per_size];
         }
         else {
             ran = [[VHRequestRange alloc] initWithLocation:i*(per_size+1)
@@ -172,6 +185,15 @@
 
 
 #pragma mark - Public Method
+
+- (NSString *)getFileName {
+    
+    if (fileName) {
+        return fileName;
+    }
+    
+    return @"--";
+}
 
 - (void)startDownload {
     
@@ -198,6 +220,7 @@
     
     self = [super init];
     if (self) {
+        _dTotalSize = 0;
         strRequestUrl = [NSString stringWithString:surl];
         desFilePath = [NSString stringWithString:path];
         [self initinal];
