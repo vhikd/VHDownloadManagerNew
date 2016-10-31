@@ -1,0 +1,17 @@
+//
+//  PrefixHeader.pch
+//  VHDownloadManager
+//
+//  Created by 刁志远 on 2016/10/30.
+//  Copyright © 2016年 刁志远. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#define FILEPATH [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#endif /* PrefixHeader_pch */

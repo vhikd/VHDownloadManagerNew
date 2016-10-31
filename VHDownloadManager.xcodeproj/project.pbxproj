@@ -10,11 +10,13 @@
 		407E7F9F1DC6186800337EC9 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7F9E1DC6186800337EC9 /* main.m */; };
 		407E7FA21DC6186800337EC9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FA11DC6186800337EC9 /* AppDelegate.m */; };
 		407E7FA51DC6186800337EC9 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FA41DC6186800337EC9 /* ViewController.m */; };
-		407E7FA81DC6186800337EC9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 407E7FA61DC6186800337EC9 /* Main.storyboard */; };
 		407E7FAA1DC6186800337EC9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 407E7FA91DC6186800337EC9 /* Assets.xcassets */; };
 		407E7FAD1DC6186800337EC9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 407E7FAB1DC6186800337EC9 /* LaunchScreen.storyboard */; };
 		407E7FB81DC6186900337EC9 /* VHDownloadManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FB71DC6186900337EC9 /* VHDownloadManagerTests.m */; };
 		407E7FC31DC6186900337EC9 /* VHDownloadManagerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FC21DC6186900337EC9 /* VHDownloadManagerUITests.m */; };
+		407E7FD31DC6193600337EC9 /* VHDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FD21DC6193600337EC9 /* VHDownloadManager.m */; };
+		407E7FD61DC6194A00337EC9 /* VHDownload.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FD51DC6194A00337EC9 /* VHDownload.m */; };
+		407E7FD91DC61A1A00337EC9 /* VHRequestRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 407E7FD81DC61A1A00337EC9 /* VHRequestRange.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,7 +43,6 @@
 		407E7FA11DC6186800337EC9 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		407E7FA31DC6186800337EC9 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		407E7FA41DC6186800337EC9 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		407E7FA71DC6186800337EC9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		407E7FA91DC6186800337EC9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		407E7FAC1DC6186800337EC9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		407E7FAE1DC6186800337EC9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -51,6 +52,13 @@
 		407E7FBE1DC6186900337EC9 /* VHDownloadManagerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VHDownloadManagerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		407E7FC21DC6186900337EC9 /* VHDownloadManagerUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VHDownloadManagerUITests.m; sourceTree = "<group>"; };
 		407E7FC41DC6186900337EC9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		407E7FD11DC6193600337EC9 /* VHDownloadManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VHDownloadManager.h; sourceTree = "<group>"; };
+		407E7FD21DC6193600337EC9 /* VHDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VHDownloadManager.m; sourceTree = "<group>"; };
+		407E7FD41DC6194A00337EC9 /* VHDownload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VHDownload.h; sourceTree = "<group>"; };
+		407E7FD51DC6194A00337EC9 /* VHDownload.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VHDownload.m; sourceTree = "<group>"; };
+		407E7FD71DC61A1A00337EC9 /* VHRequestRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VHRequestRange.h; sourceTree = "<group>"; };
+		407E7FD81DC61A1A00337EC9 /* VHRequestRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VHRequestRange.m; sourceTree = "<group>"; };
+		407E7FDA1DC63E6E00337EC9 /* PrefixHeader.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefixHeader.pch; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +89,7 @@
 		407E7F911DC6186800337EC9 = {
 			isa = PBXGroup;
 			children = (
+				407E7FDA1DC63E6E00337EC9 /* PrefixHeader.pch */,
 				407E7F9C1DC6186800337EC9 /* VHDownloadManager */,
 				407E7FB61DC6186900337EC9 /* VHDownloadManagerTests */,
 				407E7FC11DC6186900337EC9 /* VHDownloadManagerUITests */,
@@ -101,11 +110,11 @@
 		407E7F9C1DC6186800337EC9 /* VHDownloadManager */ = {
 			isa = PBXGroup;
 			children = (
+				407E7FD01DC6191800337EC9 /* download_manager */,
 				407E7FA01DC6186800337EC9 /* AppDelegate.h */,
 				407E7FA11DC6186800337EC9 /* AppDelegate.m */,
 				407E7FA31DC6186800337EC9 /* ViewController.h */,
 				407E7FA41DC6186800337EC9 /* ViewController.m */,
-				407E7FA61DC6186800337EC9 /* Main.storyboard */,
 				407E7FA91DC6186800337EC9 /* Assets.xcassets */,
 				407E7FAB1DC6186800337EC9 /* LaunchScreen.storyboard */,
 				407E7FAE1DC6186800337EC9 /* Info.plist */,
@@ -138,6 +147,19 @@
 				407E7FC41DC6186900337EC9 /* Info.plist */,
 			);
 			path = VHDownloadManagerUITests;
+			sourceTree = "<group>";
+		};
+		407E7FD01DC6191800337EC9 /* download_manager */ = {
+			isa = PBXGroup;
+			children = (
+				407E7FD11DC6193600337EC9 /* VHDownloadManager.h */,
+				407E7FD21DC6193600337EC9 /* VHDownloadManager.m */,
+				407E7FD41DC6194A00337EC9 /* VHDownload.h */,
+				407E7FD51DC6194A00337EC9 /* VHDownload.m */,
+				407E7FD71DC61A1A00337EC9 /* VHRequestRange.h */,
+				407E7FD81DC61A1A00337EC9 /* VHRequestRange.m */,
+			);
+			name = download_manager;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -251,7 +273,6 @@
 			files = (
 				407E7FAD1DC6186800337EC9 /* LaunchScreen.storyboard in Resources */,
 				407E7FAA1DC6186800337EC9 /* Assets.xcassets in Resources */,
-				407E7FA81DC6186800337EC9 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -279,6 +300,9 @@
 				407E7FA51DC6186800337EC9 /* ViewController.m in Sources */,
 				407E7FA21DC6186800337EC9 /* AppDelegate.m in Sources */,
 				407E7F9F1DC6186800337EC9 /* main.m in Sources */,
+				407E7FD91DC61A1A00337EC9 /* VHRequestRange.m in Sources */,
+				407E7FD61DC6194A00337EC9 /* VHDownload.m in Sources */,
+				407E7FD31DC6193600337EC9 /* VHDownloadManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,14 +338,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		407E7FA61DC6186800337EC9 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				407E7FA71DC6186800337EC9 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		407E7FAB1DC6186800337EC9 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -428,6 +444,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 8B95GD77T9;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "${SRCROOT}/PrefixHeader.pch";
 				INFOPLIST_FILE = VHDownloadManager/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dzy.VHDownloadManager;
@@ -440,6 +458,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 8B95GD77T9;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "${SRCROOT}/PrefixHeader.pch";
 				INFOPLIST_FILE = VHDownloadManager/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dzy.VHDownloadManager;

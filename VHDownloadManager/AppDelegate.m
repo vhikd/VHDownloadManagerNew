@@ -8,6 +8,8 @@
 
 #import "AppDelegate.h"
 
+#import "ViewController.h"
+
 @interface AppDelegate ()
 
 @end
@@ -15,8 +17,37 @@
 @implementation AppDelegate
 
 
+- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier
+  completionHandler:(void (^)())completionHandler {
+    self.backgroundSessionCompletionHandler = completionHandler;
+    //添加本地通知
+    [self presentNotification];
+}
+
+-(void)presentNotification{
+    UILocalNotification* localNotification = [[UILocalNotification alloc] init];
+    localNotification.alertBody = @"下载完成!";
+    localNotification.alertAction = @"后台传输下载已完成!";
+    //提示音
+    localNotification.soundName = UILocalNotificationDefaultSoundName;
+    //icon提示加1
+    localNotification.applicationIconBadgeNumber = [[UIApplication sharedApplication] applicationIconBadgeNumber] + 1;
+    [[UIApplication sharedApplication] presentLocalNotificationNow:localNotification];
+}
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    ViewController *ctrl = [ViewController new];
+    _navCtrl = [[UINavigationController alloc] initWithRootViewController:ctrl];
+    
+    self.window.backgroundColor = [UIColor whiteColor];
+    self.window.rootViewController = self.navCtrl;
+    [self.window makeKeyAndVisible];
+    
     return YES;
 }
 
