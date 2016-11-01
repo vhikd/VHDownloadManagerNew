@@ -1,5 +1,5 @@
-# VHDownloadManagerNew
-Use NSURLConnection to download file in multi thread 	
+# VHDownloadManager
+Use NSURLSession to download file in multi thread 	
 Split the big file to download into lots of small file, and download every small file at the same time.
 
 #Support :
