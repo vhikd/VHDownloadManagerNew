@@ -22,6 +22,8 @@
     NSMutableDictionary *downloadPath;
     
     NSString *desFilePath;
+    
+    NSString *taskID;
 }
 
 @end
@@ -160,6 +162,10 @@
     
     unsigned long long per_size = _dTotalSize/self.maxDownloadThread;
     
+    if (!taskID) {
+        taskID = [self createUuid];
+    }
+    
     for (int i=0; i<self.maxDownloadThread; i++) {
         
         VHRequestRange *ran;
@@ -174,7 +180,8 @@
         
         VHDownload *down = [VHDownload startDownloadWithUrl:strRequestUrl
                                                    andRange:ran
-                                                 andDesPath:desFilePath];
+                                                 andDesPath:desFilePath
+                                            andUniqueTaskID:taskID];
         down.index = i;
         down.delegate = self;
         [arrDownload addObject:down];
@@ -183,6 +190,25 @@
     [self startAllDownload];
 }
 
+- (NSString*)createUuid;
+{
+    NSMutableString *string = [NSMutableString stringWithCapacity:4];
+    for (int i = 0; i < 4; i++) {
+        int number = arc4random() % 36;
+        if (number < 10) {
+            int figure = arc4random() % 10;
+            NSString *tempString = [NSString stringWithFormat:@"%d", figure];
+            [string appendString:tempString];
+        }else {
+            int figure = (arc4random() % 26) + 97;
+            char character = figure;
+            NSString *tempString = [NSString stringWithFormat:@"%c", character];
+            [string appendString:tempString];
+        }
+    }
+    
+    return string;
+}
 
 #pragma mark - Public Method
 
@@ -197,10 +223,15 @@
 
 - (void)startDownload {
     
+    if (!taskID) {
+        taskID = [self createUuid];
+    }
+    
     VHRequestRange *range = [[VHRequestRange alloc] initWithLocation:0 andLength:1024];
     VHDownload *download = [VHDownload startDownloadWithUrl:strRequestUrl
                                                    andRange:range
-                                                 andDesPath:desFilePath];
+                                                 andDesPath:desFilePath
+                                            andUniqueTaskID:taskID];
     download.isTest = YES;
     download.delegate = self;
     [download startDownload];

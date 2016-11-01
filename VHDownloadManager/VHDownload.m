@@ -21,6 +21,7 @@
     
     NSMutableURLRequest *urlRequest;
     NSString *desPath;
+    NSString *taskID;                      //download session id
 }
 
 /**
@@ -68,7 +69,7 @@ didCompleteWithError:(nullable NSError *)error {
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
 {
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    AppDelegate *appDelegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
     if (appDelegate.backgroundSessionCompletionHandler) {
         void (^completionHandler)() = appDelegate.backgroundSessionCompletionHandler;
         appDelegate.backgroundSessionCompletionHandler = nil;
@@ -145,17 +146,18 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 
 #pragma mark - Public Method
 
-+ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andDesPath:(NSString *)des_path {
++ (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andDesPath:(NSString *)des_path andUniqueTaskID:(NSString *)task_id {
     
     VHDownload *download = [[self alloc] init];
-    [download startWithUrl:surl andRange:range andPath:des_path];
+    [download startWithUrl:surl andRange:range andPath:des_path andTaskID:task_id];
     download.isTest = NO;
     
     return download;
 }
 
-- (void)startWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andPath:(NSString *)path{
+- (void)startWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andPath:(NSString *)path andTaskID:(NSString *)tid{
     
+    taskID = [NSString stringWithString:tid];
     desPath = [NSString stringWithString:path];
     strRequestURL = [NSString stringWithString:surl];
     requestRange = [[VHRequestRange alloc] initWithLocation:range.location
@@ -205,7 +207,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
         if (!self.isTest) {
             
             NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
-            NSString *sid = [NSString stringWithFormat:@"%@.%@.%d",identifier,fileName,self.index];
+            NSString *sid = [NSString stringWithFormat:@"%@.%@.%td",identifier,taskID,self.index];
             cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:sid];
             //            cfg.HTTPMaximumConnectionsPerHost = 5;
         }

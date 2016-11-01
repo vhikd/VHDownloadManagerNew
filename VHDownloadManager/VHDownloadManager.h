@@ -8,8 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <CoreGraphics/CoreGraphics.h>
-
 @protocol VHDownloadManagerDelegate ;
 
 @interface VHDownloadManager : NSObject
