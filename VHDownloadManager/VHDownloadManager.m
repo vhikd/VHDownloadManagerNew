@@ -24,6 +24,9 @@
     NSString *desFilePath;
     
     NSString *taskID;
+    
+    CGFloat downloadSpeed;
+    CFTimeInterval timeStart;
 }
 
 @end
@@ -42,14 +45,19 @@
         
         if (response.statusCode == 206 && !fileName) {//can be split
             
-            fileName = [self URLDecodedString:response.suggestedFilename];
+            const char *byte = NULL;
+            byte = [response.suggestedFilename cStringUsingEncoding:NSISOLatin1StringEncoding];
+            NSStringEncoding enc = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingUTF8);
+            NSString *tmp_name = [[NSString alloc] initWithCString:byte encoding: enc];
+            
+            fileName = [self URLDecodedString:tmp_name];
             
             NSString *str = response.allHeaderFields[@"Content-Range"];
             NSRange ran = [str rangeOfString:@"/"];
             self.dTotalSize = [[str substringFromIndex:ran.location+1] longLongValue];
             downloadedSize = 0;
             
-            [self splitDownload];
+            [self splitDownloadWithFileUrl:response.URL.absoluteString];
             
             if (self.delegate && [self.delegate respondsToSelector:@selector(didStartDownloadWithFileName:andTotalSize:)]) {
                 
@@ -73,11 +81,17 @@
 - (void)download:(VHDownload *)download didWriteData:(unsigned long long)length andTotalData:(unsigned long long)total{
     
     if (!download.isTest) {
+        
+        if (timeStart == 0) {
+            timeStart = CFAbsoluteTimeGetCurrent();
+        }
+        
         downloadedSize+=length;
-        //        if(totalSize != total)
-        //            totalSize = total;
         
         _dProgress = (double)downloadedSize/_dTotalSize;
+        if (_dProgress>=1.0) {
+            _dProgress = 0.999;
+        }
         if (self.delegate && [self.delegate respondsToSelector:@selector(didLoadData:andProgress:)]) {
             [self.delegate didLoadData:length andProgress:_dProgress];
         }
@@ -153,7 +167,7 @@
     }
 }
 
-- (void)splitDownload {
+- (void)splitDownloadWithFileUrl:(NSString *)surl {
     
     if (!arrDownload) {
         arrDownload = [NSMutableArray arrayWithCapacity:3];
@@ -178,7 +192,7 @@
                                                  andLength:per_size];
         }
         
-        VHDownload *down = [VHDownload startDownloadWithUrl:strRequestUrl
+        VHDownload *down = [VHDownload startDownloadWithUrl:surl
                                                    andRange:ran
                                                  andDesPath:desFilePath
                                             andUniqueTaskID:taskID];
@@ -212,6 +226,23 @@
 
 #pragma mark - Public Method
 
+- (NSString *)getAveSpeed {
+    
+    if (timeStart == 0) {
+        return @"--KB/s";
+    }
+    
+    NSString *unit = @"KB/s";
+    CGFloat speed = 1.0*downloadedSize/1024.0/((CFAbsoluteTimeGetCurrent()-timeStart)*1.0);
+    if (speed >= 1000) {
+        unit = @"M/s";
+        speed = speed/1024;
+    }
+    
+    return [NSString stringWithFormat:@"%.2f%@",speed,unit];
+    
+}
+
 - (NSString *)getFileName {
     
     if (fileName) {
@@ -227,7 +258,7 @@
         taskID = [self createUuid];
     }
     
-    VHRequestRange *range = [[VHRequestRange alloc] initWithLocation:0 andLength:1024];
+    VHRequestRange *range = [[VHRequestRange alloc] initWithLocation:0 andLength:100];
     VHDownload *download = [VHDownload startDownloadWithUrl:strRequestUrl
                                                    andRange:range
                                                  andDesPath:desFilePath
@@ -237,11 +268,26 @@
     [download startDownload];
 }
 
+- (void)stopDownload {
+    
+    
+    for (int i=0; i<arrDownload.count; i++) {
+        VHDownload *download = arrDownload[i];
+        [download cancel];
+        download = nil;
+    }
+    [arrDownload removeAllObjects];
+    
+}
+
 #pragma mark - Initinal
 
 - (void)initinal {
     
-    self.maxDownloadThread = 10;
+    downloadSpeed = 0.0f;
+    self.maxDownloadThread = 20;
+    _dTotalSize = 0;
+    timeStart = 0;
     
 }
 
@@ -251,7 +297,6 @@
     
     self = [super init];
     if (self) {
-        _dTotalSize = 0;
         strRequestUrl = [NSString stringWithString:surl];
         desFilePath = [NSString stringWithString:path];
         [self initinal];

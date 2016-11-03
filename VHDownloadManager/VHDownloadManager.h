@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <UIKit/UIKit.h>
+
 @protocol VHDownloadManagerDelegate ;
 
 @interface VHDownloadManager : NSObject
@@ -43,8 +45,10 @@
 - (id)initWithDownloadUrl:(NSString *)surl andDownloadPath:(NSString *)path;
 
 - (void)startDownload;
+- (void)stopDownload;
 
 - (NSString *)getFileName;
+- (NSString *)getAveSpeed;
 
 @end
 

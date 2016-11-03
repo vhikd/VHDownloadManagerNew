@@ -22,6 +22,8 @@
     NSMutableURLRequest *urlRequest;
     NSString *desPath;
     NSString *taskID;                      //download session id
+    
+    BOOL  isCancel;
 }
 
 /**
@@ -45,31 +47,58 @@
 #pragma mark - NSURLSessionTaskDelegate
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler{
+    
+    if([challenge.protectionSpace.authenticationMethod  isEqual: @"NSURLAuthenticationMethodServerTrust"]){
+        
+        [challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]
+             forAuthenticationChallenge:challenge];
+        
+        [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];
+    }
+    if (challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust) {
+        NSURLCredential *cre = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+        // 调用block
+        completionHandler(NSURLSessionAuthChallengeUseCredential,cre);
+    }
+    
+    
+}
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didCompleteWithError:(nullable NSError *)error {
     
-    if (error) {
+    if (error && !isCancel) {
         NSLog(@"NSURLSessionTaskDelegate finish with error %@",error.description);
         
         NSData* resume_data = error.userInfo[NSURLSessionDownloadTaskResumeData];
-        [self.downloadTask cancel];
         self.downloadTask = nil;
         if (resume_data) {
-            self.downloadTask = [self.session downloadTaskWithResumeData:resume_data];
+            _downloadTask = [self.session downloadTaskWithResumeData:resume_data];
         }
         else {
-            self.downloadTask = [self.session downloadTaskWithRequest:urlRequest];
-            //            [self.downloadTask resume];
+            _downloadTask = [self.session downloadTaskWithRequest:urlRequest];
         }
-        [self.downloadTask resume];
+        [self.downloadTask performSelector:@selector(resume)
+                                withObject:nil
+                                afterDelay:1.0];
+        resume_data = nil;
     }
-    
+    //    else {
+    //        NSLog(@"-->>  complete");
+    //        [session.configuration.URLCache getCachedResponseForDataTask:task
+    //                                                   completionHandler:^(NSCachedURLResponse * _Nullable cachedResponse) {
+    //
+    //                                                   }];
+    //    }
 }
 
 #pragma mark - NSURLSessionDelegate
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session
 {
-    AppDelegate *appDelegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     if (appDelegate.backgroundSessionCompletionHandler) {
         void (^completionHandler)() = appDelegate.backgroundSessionCompletionHandler;
         appDelegate.backgroundSessionCompletionHandler = nil;
@@ -88,16 +117,51 @@ didCompleteWithError:(nullable NSError *)error {
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
 didFinishDownloadingToURL:(NSURL *)location {
     
-    if (!self.isTest) {
-        NSString *path = [desPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@-%02td",
-                                                                  fileName,self.index]];
+    if (!self.isTest && !isCancel) {
         
-        [[NSFileManager defaultManager] moveItemAtURL:location
-                                                toURL:[NSURL fileURLWithPath:path]
-                                                error:nil];
-        if (self.delegate && [self.delegate respondsToSelector:@selector(download:didFinishDownload:)]) {
-            [self.delegate download:self didFinishDownload:path];
+        /* some time the data we get is not the real data
+         
+         NSString *path = [desPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@-%02td",
+         fileName,self.index]];
+         [[NSFileManager defaultManager] moveItemAtURL:location
+         toURL:[NSURL fileURLWithPath:path]
+         error:nil];
+         if (self.delegate && [self.delegate respondsToSelector:@selector(download:didFinishDownload:)]) {
+         [self.delegate download:self didFinishDownload:path];
+         }
+         */
+        
+        /* some time the data we get is not the real data. eg. baidu.pcs*/
+        //        NSData *data = [NSData dataWithContentsOfURL:location];
+        NSHTTPURLResponse *rep = (NSHTTPURLResponse *)downloadTask.response;
+        if ([[rep allHeaderFields][@"Content-Type"] rangeOfString:@"html"].location == NSNotFound ||
+            [[rep allHeaderFields][@"Content-Type"] rangeOfString:@"txt"].location == NSNotFound ||
+            [[rep allHeaderFields][@"Content-Type"] rangeOfString:@"text"].location == NSNotFound) {
+            
+            NSLog(@"download size - %lld  type:%@",rep.expectedContentLength,
+                  [rep allHeaderFields][@"Content-Type"]);
+            
+            NSString *path = [desPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@-%02td",
+                                                                      fileName,self.index]];
+            [[NSFileManager defaultManager] moveItemAtURL:location
+                                                    toURL:[NSURL fileURLWithPath:path]
+                                                    error:nil];
+            if (self.delegate && [self.delegate respondsToSelector:@selector(download:didFinishDownload:)]) {
+                [self.delegate download:self didFinishDownload:path];
+            }
         }
+        else {
+            //            [self.downloadTask cancel];
+            
+            NSLog(@"error download size - %lld  type:%@",rep.expectedContentLength,
+                  [rep allHeaderFields][@"Content-Type"]);
+            self.downloadTask = nil;
+            self.downloadTask = [self.session downloadTaskWithRequest:urlRequest];
+            [self.downloadTask performSelector:@selector(resume)
+                                    withObject:nil
+                                    afterDelay:1.0];
+        }
+        
     }
     
     
@@ -113,10 +177,16 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
         
         //only exectue first time
         NSHTTPURLResponse *resp = (NSHTTPURLResponse *)self.downloadTask.response;
-        fileName = [self URLDecodedString:resp.suggestedFilename];
+        
+        const char *byte = NULL;
+        byte = [resp.suggestedFilename cStringUsingEncoding:NSISOLatin1StringEncoding];
+        NSStringEncoding enc = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingUTF8);
+        NSString *tmp_name = [[NSString alloc] initWithCString:byte encoding: enc];
+        
+        fileName = [self URLDecodedString:tmp_name];
         
         if (self.delegate && [self.delegate respondsToSelector:@selector(download:didStart:)]) {
-            [self.delegate download:self didStart:(NSHTTPURLResponse *)self.downloadTask.response];
+            [self.delegate download:self didStart:resp];
         }
     }
     
@@ -166,30 +236,37 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 
 - (void)startDownload {
     
+    isCancel = NO;
     NSURL* url = [NSURL URLWithString:strRequestURL];
     urlRequest = [NSMutableURLRequest requestWithURL:url];
     
     NSString *str_range = [NSString stringWithFormat:@"bytes=%llu-%llu",
                            requestRange.location,
                            requestRange.location+requestRange.length];
-    NSString *ua = @"netdisk;6.12.3;iPhone 6Plus;ios-iphone;10.0.2;zh_CN";
+    NSString *ua = @"netdisk;6.12.3;";
     
-    [urlRequest setValue:@"close" forHTTPHeaderField:@"Connection"];
+    //    [urlRequest setValue:@"Keep-Alive" forHTTPHeaderField:@"Connection"];
+    [urlRequest setValue:@"Close" forHTTPHeaderField:@"Connection"];
     [urlRequest setValue:@"X-Download-From" forHTTPHeaderField:@"baiduyun"];
     [urlRequest setValue:ua forHTTPHeaderField:@"User-Agent"];
-    [urlRequest setValue:@"close" forHTTPHeaderField:@"Proxy-Connection"];
     [urlRequest setValue:str_range forHTTPHeaderField:@"Range"];
-    [urlRequest setTimeoutInterval:1000];
-    
-    
+    //    [urlRequest setHTTPMethod:@"GET"];
+    [urlRequest setTimeoutInterval:60*60*5];
     
     self.downloadTask = [self.session downloadTaskWithRequest:urlRequest];
-    
     [self.downloadTask resume];
     
     
 }
 
+- (void)cancel {
+    
+    isCancel = YES;
+    [self.session invalidateAndCancel];
+    [self.session flushWithCompletionHandler:^{
+        
+    }];
+}
 
 #pragma mark - Initinal
 
@@ -203,14 +280,22 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
         NSURLSessionConfiguration *cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
         
         
+#ifdef MAC_OS_X_VERSION_10_0
         
+        
+#else
         if (!self.isTest) {
             
             NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
             NSString *sid = [NSString stringWithFormat:@"%@.%@.%td",identifier,taskID,self.index];
             cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:sid];
-            //            cfg.HTTPMaximumConnectionsPerHost = 5;
         }
+#endif
+        
+        cfg.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
+        cfg.timeoutIntervalForRequest = 60*60*5;
+        cfg.timeoutIntervalForResource = 60*60*5;
+        cfg.HTTPMaximumConnectionsPerHost = 1024;
         
         
         self.session = [NSURLSession sessionWithConfiguration:cfg delegate:self delegateQueue:[NSOperationQueue mainQueue]];
