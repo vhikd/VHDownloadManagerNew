@@ -10,41 +10,183 @@
 
 #import "VHDownloadManager.h"
 
-@interface ViewController () <VHDownloadManagerDelegate>
+@interface ViewController () <VHDownloadManagerDelegate> {
+    
+    UILabel *labTitle,*labSpeed,*labProgress;
+    
+    UIProgressView *progressBar;
+    
+    VHDownloadManager *downloadManager;
+    NSTimer *timerUpdate;
+    
+    NSString *sDownloadUrl;
+    
+}
 
 @end
 
 @implementation ViewController
 
-
 #pragma mark - VHDownloadManagerDelegate
 
-- (void)didStartDownloadWithFileName:(NSString *)file_name andTotalSize:(unsigned long long)size {
-    NSLog(@"%@ --  %lld",file_name,size);
+- (void)downloadManager:(VHDownloadManager *)manager didStartDownload:(NSString *)file_name {
+    
+    if (!timerUpdate) {
+        timerUpdate = [NSTimer scheduledTimerWithTimeInterval:1.0f
+                                                       target:self
+                                                     selector:@selector(updateInfoUI)
+                                                     userInfo:nil
+                                                      repeats:YES];
+    }
+    
 }
 
-- (void)didLoadData:(unsigned long long)size andProgress:(double)progress {
+- (void)downloadManager:(VHDownloadManager *)manager didFinishLoadAndUnZipInDirectory:(NSArray *)paths {
     
-    NSLog(@"%lld --- %.2f",size,progress);
+    NSString *msg = @"";
+    for (int i=0; i<paths.count; i++) {
+        
+        NSString *path = paths[i];
+//        [[NSFileManager defaultManager] moveItemAtPath:path
+//                                                toPath:file_des
+//                                                 error:nil];
+        if (msg.length == 0) {
+            msg = [NSString stringWithFormat:@"%@",[path lastPathComponent]];
+        }
+        else {
+            msg = [NSString stringWithFormat:@"%@\n%@",msg,[path lastPathComponent]];
+        }
+        
+    }
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Downloaf"
+                                                                   message:msg
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [self presentViewController:alert animated:YES
+                     completion:^{
+                         
+                     }];
+    
+    if (timerUpdate) {
+        [timerUpdate invalidate];
+        timerUpdate = nil;
+    }
     
 }
-- (void)didFinishLoadInDirectory:(NSString *)path {
+
+- (void)downloadManager:(VHDownloadManager *)manager didFinishLoadInDirectory:(NSString *)path; {
     
-    NSLog(@"path - %@",path);
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Downloaf"
+                                                                   message:[path lastPathComponent]
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [self presentViewController:alert animated:YES
+                     completion:^{
+                         
+                     }];
+    
+//    [[NSFileManager defaultManager] moveItemAtPath:path
+//                                            toPath:file_des
+//                                             error:nil];
+    
+    if (timerUpdate) {
+        [timerUpdate invalidate];
+        timerUpdate = nil;
+    }
+    
+}
+
+#pragma mark - Private
+
+- (void)updateInfoUI {
+    
+    labTitle.text = [NSString stringWithFormat:@"%@\n%.1fMB",
+                     [downloadManager getFileName],
+                     downloadManager.dTotalSize/1024.0/1024.0];
+    
+    if (downloadManager.dTotalSize == 0) {
+        progressBar.progress = 0.0f;
+    }
+    else {
+        progressBar.progress = downloadManager.dProgress;
+    }
+    labSpeed.text = [downloadManager getAveSpeed];
+    
+}
+
+#pragma mark - Build UI
+
+- (void)buildTitleLab {
+    
+    labTitle = [[UILabel alloc] initWithFrame:CGRectMake(0, 100, self.view.frame.size.width, 50)];
+    labTitle.numberOfLines = 2;
+    labTitle.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:labTitle];
+    
+}
+
+- (void)buildAveSpeedLab {
+    
+    float ori_y = labTitle.frame.origin.y+labTitle.frame.size.height+10;
+    
+    labSpeed = [[UILabel alloc] initWithFrame:CGRectMake(0, ori_y,
+                                                         self.view.frame.size.width, 20)];
+    labSpeed.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:labSpeed];
+}
+
+- (void)buildProgressLab {
+    
+    float ori_y = labSpeed.frame.origin.y+labSpeed.frame.size.height+10;
+    
+    labProgress = [[UILabel alloc] initWithFrame:CGRectMake(0, ori_y,
+                                                         self.view.frame.size.width, 20)];
+    labProgress.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:labProgress];
+    
+}
+
+- (void)buildProgressBar {
+    
+    float ori_y = labProgress.frame.origin.y+labProgress.frame.size.height+10;
+    
+    progressBar = [[UIProgressView alloc] initWithFrame:CGRectMake(0, ori_y,
+                                                                   self.view.frame.size.width,
+                                                                   10)];
+    progressBar.progress = .0f;
+    [self.view addSubview:progressBar];
     
 }
 
 #pragma mark - SYS
 
+- (id)initWithDownloadURL:(NSString *)surl {
+    self = [super init];
+    if (self) {
+        
+        sDownloadUrl = [NSString stringWithString:surl];
+    }
+    return self;
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    NSString *surl = @"https://1geauomtsgyzdncb3fa4unmmrgrzgramjct4zya5uf3ts65e.ourdvsss.com/d1.baidupcs.com/file/de9b33627c658ecefba0e74b89bfc656?bkt=p2-qd-838&xcode=d5121bb2afc482995993a3c0da21a0fead66b1a0853929c5a7103330c9091c9b&fid=1280098185-250528-207155959871156&time=1477903458&sign=FDTAXGERLBH-DCb740ccc5511e5e8fedcff06b081203-WKnW%2F7tqcRFUTWwGeALMfi9v7BY%3D&to=sf&fm=Qin,B,T,bs&sta_dx=34620451&sta_cs=8601&sta_ft=ape&sta_ct=7&sta_mt=7&fm2=Qingdao,B,T,bs&newver=1&newfm=1&secfm=1&flow_ver=3&pkey=1400de9b33627c658ecefba0e74b89bfc656ba900ca9000002104423&sl=77594702&expires=8h&rt=sh&r=416205936&mlogid=7066793823260874647&vuk=606923620&vbdid=800758283&fin=%E5%91%A8%E6%9D%B0%E4%BC%A6%20-%20%E6%88%91%E4%B8%8D%E9%85%8D.ape&fn=%E5%91%A8%E6%9D%B0%E4%BC%A6%20-%20%E6%88%91%E4%B8%8D%E9%85%8D.ape&slt=pm&uta=0&rtype=1&iv=0&isw=0&dp-logid=7066793823260874647&dp-callid=0.1.1&hps=1&csl=127&csign=l8EIrgzcNYJcR06i81AfOfvkgQs%3D&wshc_tag=0&wsts_tag=58170463&wsid_tag=dfff23d4&wsiphost=ipdbm";
     
-    VHDownloadManager *man = [[VHDownloadManager alloc] initWithDownloadUrl:surl andDownloadPath:FILEPATH];
-    man.delegate = self;
-    [man startDownload];
+    [self buildTitleLab];
+    [self buildAveSpeedLab];
+    [self buildProgressLab];
+    [self buildProgressBar];
+    
+    NSLog(@"%@",FILEPATH);
+    
+    timerUpdate = nil;
+    downloadManager = [[VHDownloadManager alloc] initWithDownloadUrl:sDownloadUrl
+                                                     andDownloadPath:FILEPATH];
+    downloadManager.delegate = self;
+    [downloadManager startDownload];
+    [self updateInfoUI];
+    
 }
 
 

@@ -10,6 +10,8 @@
 
 #import "AppDelegate.h"
 
+#import <CFNetwork/CFNetwork.h>
+
 
 @interface VHDownload () <NSURLSessionDelegate>{
     
@@ -69,7 +71,36 @@ didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didCompleteWithError:(nullable NSError *)error {
     
-    if (error && !isCancel) {
+    if (task.state == NSURLSessionTaskStateCanceling) {
+        return;
+    }
+    
+    if (error && !isCancel ) {
+        
+        if ([task respondsToSelector:@selector(downloadFile)]) {
+            
+            id download_file = [task performSelector:@selector(downloadFile)];
+            NSString *path = [download_file performSelector:@selector(path)];
+            NSData *data = [NSData dataWithContentsOfFile:path];
+            unsigned long long length = [data length];
+            data = nil;
+            
+            NSLog(@"index : %td  -----   %lld    ----  %lld",
+                  self.index,length,requestRange.length);
+            
+            if (length-requestRange.length <= 3 ||
+                requestRange.length-length <= 3) {
+                [self URLSession:self.session
+                    downloadTask:_downloadTask
+       didFinishDownloadingToURL:[NSURL fileURLWithPath:path]];
+                
+                NSLog(@"download success with error");
+                
+                
+                return;
+            }
+        }
+        
         NSLog(@"NSURLSessionTaskDelegate finish with error %@",error.description);
         
         NSData* resume_data = error.userInfo[NSURLSessionDownloadTaskResumeData];
@@ -107,10 +138,14 @@ didCompleteWithError:(nullable NSError *)error {
     
 }
 
-- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
-    
-    NSLog(@"NSURLSessionDelegate finish with error %@",error.description);
-}
+//- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
+//
+//    if (self.downloadTask.state == NSURLSessionTaskStateCanceling) {
+//        return;
+//    }
+//    NSLog(@"index : %td ",self.index);
+//    NSLog(@"NSURLSessionDelegate finish with error %@",error.description);
+//}
 
 #pragma mark - NSURLSessionDownloadDelegate
 
@@ -118,6 +153,10 @@ didCompleteWithError:(nullable NSError *)error {
 didFinishDownloadingToURL:(NSURL *)location {
     
     if (!self.isTest && !isCancel) {
+        
+        if (downloadTask.state == NSURLSessionTaskStateCanceling) {
+            return;
+        }
         
         /* some time the data we get is not the real data
          
@@ -149,6 +188,8 @@ didFinishDownloadingToURL:(NSURL *)location {
             if (self.delegate && [self.delegate respondsToSelector:@selector(download:didFinishDownload:)]) {
                 [self.delegate download:self didFinishDownload:path];
             }
+            
+            [self cancel];
         }
         else {
             //            [self.downloadTask cancel];
@@ -173,6 +214,10 @@ didFinishDownloadingToURL:(NSURL *)location {
  totalBytesWritten:(int64_t)totalBytesWritten
 totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
     
+    if (downloadTask.state == NSURLSessionTaskStateCanceling) {
+        return;
+    }
+    
     if (!fileName) {
         
         //only exectue first time
@@ -196,14 +241,14 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
     
 }
 
-
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
- didResumeAtOffset:(int64_t)fileOffset
-expectedTotalBytes:(int64_t)expectedTotalBytes {
-    
-    
-    
-}
+//
+//- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
+// didResumeAtOffset:(int64_t)fileOffset
+//expectedTotalBytes:(int64_t)expectedTotalBytes {
+//
+//
+//
+//}
 
 #pragma mark - Private Method
 
@@ -232,13 +277,18 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
     strRequestURL = [NSString stringWithString:surl];
     requestRange = [[VHRequestRange alloc] initWithLocation:range.location
                                                   andLength:range.length];
+    self.isTest = NO;
 }
 
 - (void)startDownload {
     
     isCancel = NO;
-    NSURL* url = [NSURL URLWithString:strRequestURL];
-    urlRequest = [NSMutableURLRequest requestWithURL:url];
+    
+    if (!urlRequest) {
+        NSURL* url = [NSURL URLWithString:strRequestURL];
+        urlRequest = [NSMutableURLRequest requestWithURL:url];
+    }
+    
     
     NSString *str_range = [NSString stringWithFormat:@"bytes=%llu-%llu",
                            requestRange.location,
@@ -246,26 +296,48 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
     NSString *ua = @"netdisk;6.12.3;";
     
     //    [urlRequest setValue:@"Keep-Alive" forHTTPHeaderField:@"Connection"];
-    [urlRequest setValue:@"Close" forHTTPHeaderField:@"Connection"];
+    //    [urlRequest setValue:@"Close" forHTTPHeaderField:@"Connection"];
     [urlRequest setValue:@"X-Download-From" forHTTPHeaderField:@"baiduyun"];
     [urlRequest setValue:ua forHTTPHeaderField:@"User-Agent"];
     [urlRequest setValue:str_range forHTTPHeaderField:@"Range"];
     //    [urlRequest setHTTPMethod:@"GET"];
-    [urlRequest setTimeoutInterval:60*60*5];
+    [urlRequest setTimeoutInterval:60*5];
     
     self.downloadTask = [self.session downloadTaskWithRequest:urlRequest];
     [self.downloadTask resume];
+}
+
+- (void)setConnectionType:(NSString *)connection {
     
-    
+    if (!urlRequest) {
+        NSURL* url = [NSURL URLWithString:strRequestURL];
+        urlRequest = [NSMutableURLRequest requestWithURL:url];
+    }
+    [urlRequest setValue:connection forHTTPHeaderField:@"Connection"];
 }
 
 - (void)cancel {
     
-    isCancel = YES;
+    [self.session getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
+        
+        for (NSURLSessionTask *_task in downloadTasks)
+        {
+            [_task cancel];
+        }
+        for (NSURLSessionTask *_task in dataTasks)
+        {
+            [_task cancel];
+        }
+        
+    }];
+    
+    [self.downloadTask suspend];
+    [[self.session delegateQueue] setSuspended:YES];
     [self.session invalidateAndCancel];
     [self.session flushWithCompletionHandler:^{
         
     }];
+    isCancel = YES;
 }
 
 #pragma mark - Initinal
@@ -279,22 +351,23 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
         
         NSURLSessionConfiguration *cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
         
-        
 #ifdef MAC_OS_X_VERSION_10_0
         
         
 #else
+        
+#endif
+        
         if (!self.isTest) {
             
             NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
             NSString *sid = [NSString stringWithFormat:@"%@.%@.%td",identifier,taskID,self.index];
             cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:sid];
         }
-#endif
         
         cfg.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
-        cfg.timeoutIntervalForRequest = 60*60*5;
-        cfg.timeoutIntervalForResource = 60*60*5;
+        cfg.timeoutIntervalForRequest = 60*5;//60*60*5;
+        cfg.timeoutIntervalForResource = 60*5;//60*60*5;
         cfg.HTTPMaximumConnectionsPerHost = 1024;
         
         

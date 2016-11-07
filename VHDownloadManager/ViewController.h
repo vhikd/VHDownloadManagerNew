@@ -11,5 +11,7 @@
 @interface ViewController : UIViewController
 
 
+- (id)initWithDownloadURL:(NSString *)surl;
+
 @end
 

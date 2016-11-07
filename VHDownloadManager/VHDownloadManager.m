@@ -9,6 +9,8 @@
 #import "VHDownloadManager.h"
 
 #import "VHDownload.h"
+#import "VHDownloadUnArchive.h"
+
 
 @interface VHDownloadManager () <VHDownloadDelegate>{
     
@@ -27,7 +29,10 @@
     
     CGFloat downloadSpeed;
     CFTimeInterval timeStart;
+    
+    NSString *strConnection;
 }
+
 
 @end
 
@@ -44,6 +49,13 @@
     if (download.isTest) {
         
         if (response.statusCode == 206 && !fileName) {//can be split
+            
+            
+            strConnection = @"Close";
+            
+            if ([response allHeaderFields][@"Connection"]) {
+                strConnection = [NSString stringWithFormat:@"%@",[response allHeaderFields][@"Connection"]];
+            }
             
             const char *byte = NULL;
             byte = [response.suggestedFilename cStringUsingEncoding:NSISOLatin1StringEncoding];
@@ -106,16 +118,18 @@
 //download finish
 - (void)download:(VHDownload *)download didFinishDownload:(NSString *)location {
     
-    [arrDownload removeObject:download];
-    
     if (!downloadPath) {
         downloadPath = [NSMutableDictionary dictionaryWithCapacity:3];
     }
+    NSInteger index = download.index;
+    NSString *sk = [NSString stringWithFormat:@"%td",index];
+    downloadPath[sk] = [NSString stringWithFormat:@"%@",location];
     
-    NSString *sk = [NSString stringWithFormat:@"%td",download.index];
-    downloadPath[sk] = location;
+    [arrDownload removeObject:download];
     
     NSLog(@"download cnt : %td",arrDownload.count);
+    [download cancel];
+    download = nil;
     
     if (arrDownload.count <= 0) {
         
@@ -130,22 +144,48 @@
                                                        error:nil];
         }
         
-        NSString *des_file = [desFilePath stringByAppendingPathComponent:fileName];
-        [m_data writeToFile:des_file atomically:YES];
+        if ([[[fileName pathExtension] uppercaseString] isEqualToString:@"ZIP"] ||
+            [[[fileName pathExtension] uppercaseString] isEqualToString:@"RAR"] ||
+            [[[fileName pathExtension] uppercaseString] isEqualToString:@"7Z"] ) {//解压
+            
+            NSString *zip_path = [FILEPATH stringByAppendingPathComponent:fileName];
+            [m_data writeToFile:zip_path atomically:YES];
+            
+            
+            VHDownloadUnArchive *downloadUnarchive = [[VHDownloadUnArchive alloc] init];
+            [downloadUnarchive unarchiveWithZipFile:zip_path andDesPath:FILEPATH];
+            NSArray *arrUnzipFile = [NSArray arrayWithArray:[downloadUnarchive getUnzipFile]];
+            
+            if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didFinishLoadAndUnZipInDirectory:)]) {
+                
+                [self.delegate downloadManager:self
+              didFinishLoadAndUnZipInDirectory:arrUnzipFile];
+            }
+            downloadUnarchive = nil;
+            
+            [[NSFileManager defaultManager] removeItemAtPath:zip_path
+                                                       error:nil];
+        }
+        else {
+            NSString *des_file = [desFilePath stringByAppendingPathComponent:fileName];
+            [m_data writeToFile:des_file atomically:YES];
+            
+            if (self.delegate && [self.delegate respondsToSelector:@selector(didFinishLoadInDirectory:)]) {
+                [self.delegate didFinishLoadInDirectory:des_file];
+            }
+            
+            if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didFinishLoadInDirectory:)]) {
+                [self.delegate downloadManager:self didFinishLoadInDirectory:des_file];
+            }
+        }
+        
+        
         [m_data resetBytesInRange:NSMakeRange(0, [m_data length])];
         [m_data setLength:0];
         m_data = nil;
         
-        
-        if (self.delegate && [self.delegate respondsToSelector:@selector(didFinishLoadInDirectory:)]) {
-            [self.delegate didFinishLoadInDirectory:des_file];
-        }
-        
-        if (self.delegate && [self.delegate respondsToSelector:@selector(downloadManager:didFinishLoadInDirectory:)]) {
-            [self.delegate downloadManager:self didFinishLoadInDirectory:des_file];
-        }
-        
     }
+    
 }
 
 
@@ -185,7 +225,7 @@
         VHRequestRange *ran;
         if (i== self.maxDownloadThread-1) {//最后一个
             ran = [[VHRequestRange alloc] initWithLocation:i*(per_size+1)
-                                                 andLength:_dTotalSize-i*per_size];
+                                                 andLength:_dTotalSize-i*(per_size+1)+1];
         }
         else {
             ran = [[VHRequestRange alloc] initWithLocation:i*(per_size+1)
@@ -198,6 +238,7 @@
                                             andUniqueTaskID:taskID];
         down.index = i;
         down.delegate = self;
+        [down setConnectionType:strConnection];
         [arrDownload addObject:down];
     }
     
@@ -225,6 +266,11 @@
 }
 
 #pragma mark - Public Method
+
+- (void)testUnzip {
+    
+    
+}
 
 - (NSString *)getAveSpeed {
     
@@ -300,9 +346,11 @@
         strRequestUrl = [NSString stringWithString:surl];
         desFilePath = [NSString stringWithString:path];
         [self initinal];
+        [self testUnzip];
     }
     
     return self;
 }
+
 
 @end

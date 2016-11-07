@@ -8,7 +8,7 @@
 
 #import "AppDelegate.h"
 
-#import "ViewController.h"
+#import "VHWebInfo.h"
 
 @interface AppDelegate ()
 
@@ -41,7 +41,7 @@
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    ViewController *ctrl = [ViewController new];
+    VHWebInfo *ctrl = [VHWebInfo new];
     _navCtrl = [[UINavigationController alloc] initWithRootViewController:ctrl];
     
     self.window.backgroundColor = [UIColor whiteColor];

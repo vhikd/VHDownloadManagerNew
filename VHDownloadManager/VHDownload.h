@@ -39,6 +39,7 @@
 
 + (VHDownload *)startDownloadWithUrl:(NSString *)surl andRange:(VHRequestRange *)range andDesPath:(NSString *)des_path andUniqueTaskID:(NSString *)task_id;
 
+- (void)setConnectionType:(NSString *)connection;
 - (void)startDownload;
 - (void)cancel;
 

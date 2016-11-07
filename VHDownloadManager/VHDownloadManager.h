@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-
 #import <UIKit/UIKit.h>
 
 @protocol VHDownloadManagerDelegate ;
@@ -50,6 +49,8 @@
 - (NSString *)getFileName;
 - (NSString *)getAveSpeed;
 
+//- (void)testUnzip;
+
 @end
 
 
@@ -72,6 +73,11 @@
  * path : downloaded file path
  */
 - (void)downloadManager:(VHDownloadManager *)manager didFinishLoadInDirectory:(NSString *)path;
+
+/*
+ * path : downloaded and unzip files with path array
+ */
+- (void)downloadManager:(VHDownloadManager *)manager didFinishLoadAndUnZipInDirectory:(NSArray *)paths;
 
 /*
  * start download
